@@ -1,4 +1,4 @@
-# Pokemon GraphQL Api
+# Pokemon GraphQL API
 
 Test Project with Typescript, TypeORM, TypeGraphQL
 

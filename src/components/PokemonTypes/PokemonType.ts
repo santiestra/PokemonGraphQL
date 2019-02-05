@@ -1,10 +1,10 @@
 import { Field, ID, ObjectType } from "type-graphql";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Pokemon } from "../Pokemons/Pokemon";
 
 @ObjectType()
 @Entity()
-export class Type {
+export class PokemonType {
     @Field((type) => ID)
     @PrimaryGeneratedColumn()
     public id: number;
@@ -13,7 +13,6 @@ export class Type {
     @Column({ unique: true })
     public name: string;
 
-    @Field((type) => [Pokemon])
-    @OneToMany((type) => Pokemon, (pokemon) => pokemon.type)
+    @ManyToMany((type) => Pokemon, (pokemon) => pokemon.pokemonTypes)
     public pokemons: Pokemon[];
 }

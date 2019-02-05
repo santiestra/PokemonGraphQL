@@ -3,32 +3,36 @@ import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 
 import { Pokemon } from "../Pokemons/Pokemon";
-import { Type } from "../Types/Type";
+import { PokemonType } from "../PokemonTypes/PokemonType";
 import { PokemonInput } from "./PokemonInput";
 
 @Resolver((of) => Pokemon)
 export class PokemonResolver {
   constructor(
     @InjectRepository(Pokemon) private readonly pokemonRepository: Repository<Pokemon>,
-    @InjectRepository(Type) private readonly typeRepository: Repository<Type>,
+    @InjectRepository(PokemonType) private readonly typeRepository: Repository<PokemonType>,
   ) {}
 
   @Query((returns) => Pokemon, { nullable: true })
   public pokemon(@Arg("pokemonNumber", (type) => Int) pokemonNumber: number): Promise<Pokemon> {
-    return this.pokemonRepository.findOne({ number: pokemonNumber });
+    return this.pokemonRepository.findOne({ number: pokemonNumber }, { relations: ["pokemonTypes"]});
   }
 
   @Query((returns) => [Pokemon])
   public async pokemons(): Promise<Pokemon[]> {
-    return await this.pokemonRepository.createQueryBuilder().orderBy("number", "ASC").getMany();
+    return this.pokemonRepository.find({ relations: ["pokemonTypes"] });
   }
 
   @Query((returns) => [Pokemon])
-  public async searchPokemons(@Arg("type", { nullable: true }) type?: string): Promise<Pokemon[]> {
+  public async searchPokemons(@Arg("name", { nullable: true }) name?: string): Promise<Pokemon[]> {
     try {
-      const typeToSearch = await this.typeRepository.findOneOrFail({ name: type });
+      let query = this.pokemonRepository.createQueryBuilder("pokemon");
 
-      return await this.pokemonRepository.find({ typeId: typeToSearch.id });
+      if (name) {
+        query = query.where("pokemon.name ILIKE :name").setParameters({ name: `%${name}%` });
+      }
+
+      return query.getMany();
     } catch (error) {
       return error;
     }
@@ -41,7 +45,7 @@ export class PokemonResolver {
   }
 
   @FieldResolver()
-  public async type(@Root() pokemon: Pokemon): Promise<Type> {
-    return (await this.typeRepository.findOne(pokemon.typeId, { cache: 1000 }))!;
+  public pokemonTypes(@Root() pokemon: Pokemon): PokemonType[] {
+    return pokemon.pokemonTypes;
   }
 }

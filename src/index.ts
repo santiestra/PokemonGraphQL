@@ -1,4 +1,4 @@
-require('dotenv').config();
+require("dotenv").config(); // tslint:disable-line
 
 import { ApolloServer } from "apollo-server";
 import "reflect-metadata";
@@ -7,7 +7,7 @@ import { Container, Inject, Service } from "typedi";
 import { createConnection, useContainer as typeORMUseContainer } from "typeorm";
 
 import { PokemonResolver } from "./components/Pokemons/PokemonResolver";
-import { TypeResolver } from "./components/Types/TypeResolver";
+import { PokemonTypeResolver } from "./components/PokemonTypes/PokemonTypeResolver";
 import config from "./config";
 import Seed from "./db/seed/seeds";
 import Logger from "./lib/Logger";
@@ -25,16 +25,16 @@ class App {
       await createConnection();
 
       if (config.RUN_SEEDS) {
-        this.logger.info('Running seeds');
+        this.logger.info("Running seeds");
 
-        const seed = Container.get(Seed);
+        const seed = await Container.get(Seed);
         await seed.run();
 
-        this.logger.info('Finished running seeds');
+        this.logger.info("Finished running seeds");
       }
 
       const schema = await buildSchema({
-        resolvers: [PokemonResolver, TypeResolver],
+        resolvers: [PokemonResolver, PokemonTypeResolver],
       });
 
       //   const context: Context = { user: defaultUser };
